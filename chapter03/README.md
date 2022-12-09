@@ -76,7 +76,7 @@ $ output/fork
     Type:                              DYN (Shared object file)
     Machine:                           Advanced Micro Devices X86-64
     Version:                           0x1
-    Entry point address:               0x2850
+    Entry point address:               * 0x2850 * 
     Start of program headers:          64 (bytes into file)
     Start of section headers:          37336 (bytes into file)
     Flags:                             0x0
@@ -86,6 +86,27 @@ $ output/fork
     Size of section headers:           64 (bytes)
     Number of section headers:         30
     Section header string table index: 29
+
+  ELF Header:                                                             
+    Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00              
+    Class:                             ELF64                              
+    Data:                              2's complement, little endian      
+    Version:                           1 (current)                        
+    OS/ABI:                            UNIX - System V                    
+    ABI Version:                       0                                  
+    Type:                              DYN (Position-Independent Executabl
+    Machine:                           Advanced Micro Devices X86-64      
+    Version:                           0x1                                
+    Entry point address:               * 0x2b90 *                             
+    Start of program headers:          64 (bytes into file)               
+    Start of section headers:          33344 (bytes into file)            
+    Flags:                             0x0                                
+    Size of this header:               64 (bytes)                         
+    Size of program headers:           56 (bytes)                         
+    Number of program headers:         13                                 
+    Size of section headers:           64 (bytes)                         
+    Number of section headers:         31                                 
+    Section header string table index: 30
   ```
 
     - Entry point address 항목이 엔트리 포인트의 주소이다.
@@ -164,8 +185,15 @@ $ output/fork
     L (link order), O (extra OS processing required), G (group), T (TLS),
     C (compressed), x (unknown), o (OS specific), E (exclude),
     l (large), p (processor specific)
-  ```
+    
+    
+ [Nr] Name  Type      Address         Offset   Size             EntSize          Flags  Link  Info  Align
+ [16] .text PROGBITS 00000000000025f0 000025f0 0000000000002b81 0000000000000000 AX       0     0     16
+ [26] .data PROGBITS 0000000000009000 00008000 0000000000000098 0000000000000000 WA       0     0     32  
 
+  ```
+  
+  
     - [16] .text 영역과 [26] .data 영역이 각각 코드와 데이터 영역의 정보이다.
 
     - Address : 메모리 맵 시작 주소
@@ -179,12 +207,22 @@ $ output/fork
   |구성|값 (16진수)|
   |:-:|:-:|
   |엔트리 포인트|0x2850|
-  |코드 영역의 메모리 맵 시작 주소|0000000000002580|
-  |코드 영역의 파일상 오프셋|00002580|
+  |코드 영역의 메모리 맵 시작 주소|0000000000002580| // 9600
+  |코드 영역의 파일상 오프셋|00002580| 
   |코드 영역의 사이즈|0000000000003692|
-  |데이터 영역의 메모리 맵 시작 주소|000000000000a000|
+  |데이터 영역의 메모리 맵 시작 주소|000000000000a000| // 40960
   |데이터 영역의 파일상 오프셋|00009000|
   |데이터 영역의 사이즈|0000000000000080|
+  
+  |구성|값 (16진수)|
+  |:-:|:-:|
+  |엔트리 포인트|0x2b90|
+  |코드 영역의 메모리 맵 시작 주소|00000000000025f0| // 9712
+  |코드 영역의 파일상 오프셋|000025f0| // 9712
+  |코드 영역의 사이즈|0000000000002b81|
+  |데이터 영역의 메모리 맵 시작 주소|0000000000009000| // 36864
+  |데이터 영역의 파일상 오프셋|00008000|
+  |데이터 영역의 사이즈|0000000000000098|
 
 - */proc/PID번호/maps* 파일을 통해 프로세스의 메모리 맵을 볼 수 있다.
 
@@ -192,11 +230,11 @@ $ output/fork
   $ /bin/sleep 10000 &
   [1] 16292
   $ cat /proc/16292/maps
-  55addbc8d000-55addbc8f000 r--p 00000000 103:05 2098267                   /usr/bin/sleep
-  55addbc8f000-55addbc93000 r-xp 00002000 103:05 2098267                   /usr/bin/sleep  # 코드 영역
-  55addbc93000-55addbc95000 r--p 00006000 103:05 2098267                   /usr/bin/sleep
-  55addbc96000-55addbc97000 r--p 00008000 103:05 2098267                   /usr/bin/sleep
-  55addbc97000-55addbc98000 rw-p 00009000 103:05 2098267                   /usr/bin/sleep  # 데이터 영역
+  55addbc8d000-55addbc8f000 r--p 00000000 103:05 2098267    // 0           /usr/bin/sleep
+  55addbc8f000-55addbc93000 r-xp 00002000 103:05 2098267    // 8192        /usr/bin/sleep  # 코드 영역
+  55addbc93000-55addbc95000 r--p 00006000 103:05 2098267    // 24576       /usr/bin/sleep
+  55addbc96000-55addbc97000 r--p 00008000 103:05 2098267    // 32768       /usr/bin/sleep
+  55addbc97000-55addbc98000 rw-p 00009000 103:05 2098267    // 36864       /usr/bin/sleep  # 데이터 영역
   55addcff5000-55addd016000 rw-p 00000000 00:00 0                          [heap]
   7f27b5a7a000-7f27b612f000 r--p 00000000 103:05 2097617                   /usr/lib/locale/locale-archive
   7f27b612f000-7f27b6154000 r--p 00000000 103:05 2099337                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
@@ -219,6 +257,43 @@ $ output/fork
 
   $ kill 16292
   [1]  + 16292 terminated  /bin/sleep 10000 
+  
+  
+  /bin/sleep 10000 &
+  cat /proc/302/maps
+    
+  559d2a90b000-559d2a90d000 r--p 00000000 00:23 680    // 0                /usr/bin/sleep 
+  559d2a90d000-559d2a911000 r-xp 00002000 00:23 680    // 8192             /usr/bin/sleep     # 코드 영역
+  559d2a911000-559d2a912000 r--p 00006000 00:23 680    // 24576            /usr/bin/sleep     
+  559d2a913000-559d2a914000 r--p 00007000 00:23 680    // 28672            /usr/bin/sleep     
+  559d2a914000-559d2a915000 rw-p 00008000 00:23 680    // 32768            /usr/bin/sleep     # 데이터 영역
+  559d2c0b6000-559d2c0d7000 rw-p 00000000 00:00 0                          [heap]             
+  7f50ebda3000-7f50ebda6000 rw-p 00000000 00:00 0                                             
+  7f50ebda6000-7f50ebdce000 r--p 00000000 00:23 1213                       /usr/lib/x86_64-linu
+  x-gnu/libc.so.6                                                                             
+  7f50ebdce000-7f50ebf63000 r-xp 00028000 00:23 1213                       /usr/lib/x86_64-linu
+  x-gnu/libc.so.6                                                                             
+  7f50ebf63000-7f50ebfbb000 r--p 001bd000 00:23 1213                       /usr/lib/x86_64-linu
+  x-gnu/libc.so.6                                                                             
+  7f50ebfbb000-7f50ebfbf000 r--p 00214000 00:23 1213                       /usr/lib/x86_64-linu
+  x-gnu/libc.so.6                                                                              7f50ebfbf000-7f50ebfc1000 rw-p 00218000 00:23 1213                       /usr/lib/x86_64-linu
+  x-gnu/libc.so.6                                                                             
+  7f50ebfc1000-7f50ebfce000 rw-p 00000000 00:00 0                                              7f50ebfd0000-7f50ebfd2000 rw-p 00000000 00:00 0                                              7f50ebfd2000-7f50ebfd4000 r--p 00000000 00:23 1195                       /usr/lib/x86_64-linu
+  x-gnu/ld-linux-x86-64.so.2                                                                  7f50ebfd4000-7f50ebffe000 r-xp 00002000 00:23 1195                       /usr/lib/x86_64-linu
+  x-gnu/ld-linux-x86-64.so.2                                                                   
+  7f50ebffe000-7f50ec009000 r--p 0002c000 00:23 1195                       /usr/lib/x86_64-linu
+  x-gnu/ld-linux-x86-64.so.2                                                                   
+  7f50ec00a000-7f50ec00c000 r--p 00037000 00:23 1195                       /usr/lib/x86_64-linu
+  x-gnu/ld-linux-x86-64.so.2                                                                   
+  7f50ec00c000-7f50ec00e000 rw-p 00039000 00:23 1195                       /usr/lib/x86_64-linu
+  x-gnu/ld-linux-x86-64.so.2                                                                   
+  7ffcaa4db000-7ffcaa4fc000 rw-p 00000000 00:00 0                          [stack]           
+  7ffcaa52c000-7ffcaa52f000 r--p 00000000 00:00 0                          [vvar]             
+  7ffcaa52f000-7ffcaa531000 r-xp 00000000 00:00 0                          [vdso]             
+  ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall] 
+  
+  kill 302
+  
   ```
 
     - 각 항목은 다음과 같은 순서이다.
